@@ -6,7 +6,7 @@ import 'loading_screen_controller.dart';
 class LoadingScreen {
   //singleton pattern
   LoadingScreen._sharedInstance();
-  static late final LoadingScreen _shared = LoadingScreen._sharedInstance();
+  static final LoadingScreen _shared = LoadingScreen._sharedInstance();
   factory LoadingScreen.instance() => _shared;
 
   LoadingScreenController? _controller;

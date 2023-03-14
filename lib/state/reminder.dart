@@ -2,6 +2,7 @@ import 'package:mobx/mobx.dart';
 
 part 'reminder.g.dart';
 
+// ignore: library_private_types_in_public_api
 class Reminder = _Reminder with _$Reminder;
 
 abstract class _Reminder with Store {
