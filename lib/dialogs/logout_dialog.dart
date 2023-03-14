@@ -1,0 +1,15 @@
+import 'package:flutter/widgets.dart' show BuildContext;
+
+import 'generic_dialog.dart';
+
+Future<bool> showLogOutDialog(BuildContext context) {
+  return showGenericDialog<bool>(
+    context: context,
+    title: 'Log out',
+    content: 'Are you sure you want to log out?',
+    optionsBuilder: () => {
+      'Cancel': false,
+      'Log Out': true,
+    },
+  ).then((value) => value ?? false);
+}
