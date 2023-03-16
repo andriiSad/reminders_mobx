@@ -57,8 +57,8 @@ class ReminderListView extends StatelessWidget {
               controlAffinity: ListTileControlAffinity.leading,
               value: reminder.isDone,
               onChanged: (bool? isDone) {
-                appState.modify(
-                  reminder,
+                appState.modifyReminder(
+                  reminderId: reminder.id,
                   isDone: isDone ?? false,
                 );
                 reminder.isDone = isDone ?? false;
