@@ -120,4 +120,37 @@ void main() {
       mockReminders.length + 1,
     );
   });
+  test('Deleting reminders', () async {
+    await appState.initialize();
+    final didDeleteReminder1 = await appState.deleteReminder(mockReminder1);
+
+    expect(
+      didDeleteReminder1,
+      true,
+    );
+    final didDeleteReminder2 = await appState.deleteReminder(mockReminder2);
+    expect(
+      didDeleteReminder2,
+      true,
+    );
+    expect(
+      appState.reminders.isEmpty,
+      true,
+    );
+  });
+
+  test('Deleting all reminders', () async {
+    await appState.initialize();
+    final didDeleteReminders = await appState.deleteAccount();
+
+    expect(
+      didDeleteReminders,
+      true,
+    );
+
+    expect(
+      appState.reminders.isEmpty,
+      true,
+    );
+  });
 }
