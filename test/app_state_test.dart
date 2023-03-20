@@ -119,23 +119,50 @@ void main() {
       appState.reminders.length,
       mockReminders.length + 1,
     );
+
+    final testReminder = appState.reminders.firstWhere(
+      (element) => element.id == mockReminderId,
+    );
+
+    expect(
+      testReminder.text,
+      text,
+    );
+
+    expect(
+      testReminder.isDone,
+      false,
+    );
   });
   test('Deleting reminders', () async {
     await appState.initialize();
-    final didDeleteReminder1 = await appState.deleteReminder(mockReminder1);
+    var count = appState.reminders.length;
+    var reminder = appState.reminders.first;
+
+    var deleted = await appState.deleteReminder(reminder);
 
     expect(
-      didDeleteReminder1,
+      deleted,
       true,
     );
-    final didDeleteReminder2 = await appState.deleteReminder(mockReminder2);
+
     expect(
-      didDeleteReminder2,
+      appState.reminders.length,
+      count - 1,
+    );
+
+    reminder = appState.reminders.first;
+    count = appState.reminders.length;
+    deleted = await appState.deleteReminder(mockReminder2);
+
+    expect(
+      deleted,
       true,
     );
+
     expect(
-      appState.reminders.isEmpty,
-      true,
+      appState.reminders.length,
+      count - 1,
     );
   });
 
@@ -151,6 +178,26 @@ void main() {
     expect(
       appState.reminders.isEmpty,
       true,
+    );
+
+    expect(
+      appState.currentScreen,
+      AppScreen.login,
+    );
+  });
+  test('Log Out', () async {
+    await appState.initialize();
+
+    await appState.logOut();
+
+    expect(
+      appState.reminders.isEmpty,
+      true,
+    );
+
+    expect(
+      appState.currentScreen,
+      AppScreen.login,
     );
   });
 }

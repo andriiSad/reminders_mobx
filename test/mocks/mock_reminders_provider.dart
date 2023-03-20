@@ -29,6 +29,7 @@ final Iterable<Reminder> mockReminders = [
   mockReminder1,
   mockReminder2,
 ];
+const mockReminderId = 'mockreminderid';
 
 class MockRemindersProvider implements RemindersProvider {
   @override
@@ -37,7 +38,7 @@ class MockRemindersProvider implements RemindersProvider {
     required String text,
     required DateTime creationDate,
   }) =>
-      mockReminder1Id.toFuture(oneSecond);
+      mockReminderId.toFuture(oneSecond);
 
   @override
   Future<void> deleteAllDocuments({
