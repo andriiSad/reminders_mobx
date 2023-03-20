@@ -31,8 +31,8 @@ class LoadingScreen {
     required BuildContext context,
     required String text,
   }) {
-    final _text = StreamController<String>();
-    _text.add(text);
+    final textStreamController = StreamController<String>();
+    textStreamController.add(text);
 
     //get the size
     final state = Overlay.of(context);
@@ -69,7 +69,7 @@ class LoadingScreen {
                         height: 20,
                       ),
                       StreamBuilder<String>(
-                        stream: _text.stream,
+                        stream: textStreamController.stream,
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
                             return Text(
@@ -94,12 +94,12 @@ class LoadingScreen {
 
     return LoadingScreenController(
       close: () {
-        _text.close();
+        textStreamController.close();
         overlay.remove();
         return true;
       },
       update: (text) {
-        _text.add(text);
+        textStreamController.add(text);
         return true;
       },
     );
