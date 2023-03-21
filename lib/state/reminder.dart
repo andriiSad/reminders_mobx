@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:mobx/mobx.dart';
 
 part 'reminder.g.dart';
@@ -10,6 +11,15 @@ abstract class _Reminder with Store {
   final DateTime creationDate;
 
   @observable
+  bool hasImage;
+
+  @observable
+  Uint8List? imageData;
+
+  @observable
+  bool isLoading;
+
+  @observable
   String text;
 
   @observable
@@ -20,7 +30,8 @@ abstract class _Reminder with Store {
     required this.creationDate,
     required this.text,
     required this.isDone,
-  });
+    required this.hasImage,
+  }) : isLoading = false;
 
   @override
   bool operator ==(covariant _Reminder other) =>

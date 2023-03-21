@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:reminders_mobx/provider/reminders_provider.dart';
 import 'package:reminders_mobx/state/reminder.dart';
 
@@ -12,6 +14,7 @@ final mockReminder1 = Reminder(
   id: mockReminder1Id,
   isDone: mockReminder1IsDone,
   text: mockReminder1Text,
+  hasImage: false,
 );
 
 final mockReminder2DateTime = DateTime(2001, 1, 2, 3, 4, 5, 6, 7);
@@ -23,6 +26,7 @@ final mockReminder2 = Reminder(
   id: mockReminder2Id,
   isDone: mockReminder2IsDone,
   text: mockReminder2Text,
+  hasImage: false,
 );
 
 final Iterable<Reminder> mockReminders = [
@@ -66,4 +70,22 @@ class MockRemindersProvider implements RemindersProvider {
     required String userId,
   }) =>
       Future.delayed(oneSecond);
+
+  @override
+  Future<Uint8List?> getReminderImage({
+    required String userId,
+    required ReminderId reminderId,
+  }) {
+    // TODO: implement getReminderImage
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> setReminderHasImage({
+    required ReminderId reminderId,
+    required String userId,
+  }) {
+    // TODO: implement setReminderHasImage
+    throw UnimplementedError();
+  }
 }

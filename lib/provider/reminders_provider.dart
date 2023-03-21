@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:reminders_mobx/state/reminder.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 typedef ReminderId = String;
 
@@ -28,6 +30,16 @@ abstract class RemindersProvider {
   Future<Iterable<Reminder>> loadReminders({
     required String userId,
   });
+
+  Future<void> setReminderHasImage({
+    required ReminderId reminderId,
+    required String userId,
+  });
+
+  Future<Uint8List?> getReminderImage({
+    required String userId,
+    required ReminderId reminderId,
+  });
 }
 
 class FirestoreRemindersProvider implements RemindersProvider {
@@ -45,6 +57,7 @@ class FirestoreRemindersProvider implements RemindersProvider {
         _DocumentKeys.text: text,
         _DocumentKeys.creationDate: creationDate.toIso8601String(),
         _DocumentKeys.isDone: false,
+        _DocumentKeys.hasImage: false,
       },
     );
     return firebaseReminder.id;
@@ -59,7 +72,13 @@ class FirestoreRemindersProvider implements RemindersProvider {
     final collection = await store.collection(userId).get();
     for (final document in collection.docs) {
       operation.delete(document.reference);
+      try {
+        await FirebaseStorage.instance.ref(userId).child(document.id).delete();
+      } catch (_) {
+        //we are not handling errors for now
+      }
     }
+
     //delete all reminders for this user on Firebase
     await operation.commit();
   }
@@ -77,6 +96,16 @@ class FirestoreRemindersProvider implements RemindersProvider {
       (element) => element.id == id,
     );
     await firebaseReminder.reference.delete();
+
+    //delete any image for this reminder
+    try {
+      await FirebaseStorage.instance
+          .ref(userId)
+          .child(firebaseReminder.id)
+          .delete();
+    } catch (_) {
+      //we are not handling errors for now
+    }
   }
 
   @override
@@ -92,6 +121,7 @@ class FirestoreRemindersProvider implements RemindersProvider {
         creationDate: DateTime.parse(doc[_DocumentKeys.creationDate] as String),
         text: doc[_DocumentKeys.text] as String,
         isDone: doc[_DocumentKeys.isDone] as bool,
+        hasImage: doc[_DocumentKeys.hasImage] as bool,
       ),
     );
     return reminders;
@@ -102,6 +132,16 @@ class FirestoreRemindersProvider implements RemindersProvider {
     required ReminderId reminderId,
     required bool isDone,
     required String userId,
+  }) =>
+      _modifyReminder(reminderId: reminderId, userId: userId, keyValues: {
+        _DocumentKeys.isDone: isDone,
+      });
+
+  @override
+  Future<void> _modifyReminder({
+    required ReminderId reminderId,
+    required String userId,
+    required Map<String, Object> keyValues,
   }) async {
     //update the remote reminder
     final collection =
@@ -110,7 +150,30 @@ class FirestoreRemindersProvider implements RemindersProvider {
         .firstWhere((element) => element.id == reminderId)
         .reference;
 
-    await firebaseReminder.update({_DocumentKeys.isDone: isDone});
+    await firebaseReminder.update(keyValues);
+  }
+
+  @override
+  Future<void> setReminderHasImage({
+    required ReminderId reminderId,
+    required String userId,
+  }) =>
+      _modifyReminder(reminderId: reminderId, userId: userId, keyValues: {
+        _DocumentKeys.hasImage: true,
+      });
+
+  @override
+  Future<Uint8List?> getReminderImage({
+    required String userId,
+    required ReminderId reminderId,
+  }) async {
+    try {
+      final ref = FirebaseStorage.instance.ref(userId).child(reminderId);
+      final data = await ref.getData();
+      return data;
+    } catch (_) {
+      return null;
+    }
   }
 }
 
@@ -118,4 +181,5 @@ abstract class _DocumentKeys {
   static const text = 'text';
   static const creationDate = 'creation_date';
   static const isDone = 'is_done';
+  static const hasImage = 'has_image';
 }
