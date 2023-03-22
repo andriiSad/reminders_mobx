@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 import '../dialogs/delete_reminder_dialog.dart';
 import '../state/app_state.dart';
 
-late final _imagePicker = ImagePicker();
+final _imagePicker = ImagePicker();
 
 class RemindersListView extends StatelessWidget {
   const RemindersListView({super.key});
@@ -45,62 +45,66 @@ class ReminderTile extends StatelessWidget {
     final reminder = appState.sortedReminders[reminderIndex];
 
     return Observer(
-      builder: (context) => CheckboxListTile(
-        controlAffinity: ListTileControlAffinity.leading,
-        value: reminder.isDone,
-        onChanged: (bool? isDone) {
-          context.read<AppState>().modifyReminder(
-                reminderId: reminder.id,
-                isDone: isDone ?? false,
-              );
-          reminder.isDone = isDone ?? false;
-        },
-        subtitle: ReminderImageView(
-          reminderIndex: reminderIndex,
-        ),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                reminder.text,
-              ),
-            ),
-            reminder.isLoading
-                ? const CircularProgressIndicator()
-                : const SizedBox(),
-            reminder.hasImage
-                ? const SizedBox()
-                : IconButton(
-                    onPressed: () async {
-                      final image = await imagePicker.pickImage(
-                        source: ImageSource.gallery,
-                      );
-
-                      if (image != null) {
-                        appState.upload(
-                          filePath: image.path,
-                          forReminderId: reminder.id,
-                        );
-                      }
-                    },
-                    icon: const Icon(
-                      Icons.upload,
-                    ),
+      builder: (context) => Column(
+        children: [
+          CheckboxListTile(
+            controlAffinity: ListTileControlAffinity.leading,
+            value: reminder.isDone,
+            onChanged: (bool? isDone) {
+              context.read<AppState>().modifyReminder(
+                    reminderId: reminder.id,
+                    isDone: isDone ?? false,
+                  );
+              reminder.isDone = isDone ?? false;
+            },
+            title: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    reminder.text,
                   ),
-            IconButton(
-              icon: const Icon(
-                Icons.delete,
-              ),
-              onPressed: () async {
-                final shouldDeleteReminder =
-                    await showDeleteReminderDialog(context);
-                if (shouldDeleteReminder && context.mounted) {
-                  context.read<AppState>().deleteReminder(reminder);
-                }
-              },
+                ),
+                reminder.isLoading
+                    ? const CircularProgressIndicator()
+                    : const SizedBox(),
+                reminder.hasImage
+                    ? const SizedBox()
+                    : IconButton(
+                        onPressed: () async {
+                          final image = await imagePicker.pickImage(
+                            source: ImageSource.gallery,
+                          );
+
+                          if (image != null) {
+                            appState.upload(
+                              filePath: image.path,
+                              forReminderId: reminder.id,
+                            );
+                          }
+                        },
+                        icon: const Icon(
+                          Icons.upload,
+                        ),
+                      ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.delete,
+                  ),
+                  onPressed: () async {
+                    final shouldDeleteReminder =
+                        await showDeleteReminderDialog(context);
+                    if (shouldDeleteReminder && context.mounted) {
+                      context.read<AppState>().deleteReminder(reminder);
+                    }
+                  },
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          ReminderImageView(
+            reminderIndex: reminderIndex,
+          )
+        ],
       ),
     );
   }
@@ -118,28 +122,35 @@ class ReminderImageView extends StatelessWidget {
     final appState = context.read<AppState>();
     final reminder = appState.sortedReminders[reminderIndex];
     if (reminder.hasImage) {
-      return FutureBuilder<Uint8List?>(
-        future: appState.getReminderImage(
-          reminderId: reminder.id,
+      return SizedBox(
+        height: 150,
+        width: 150,
+        child: FutureBuilder<Uint8List?>(
+          future: appState.getReminderImage(
+            reminderId: reminder.id,
+          ),
+          builder: (context, snapshot) {
+            switch (snapshot.connectionState) {
+              case ConnectionState.none:
+              case ConnectionState.waiting:
+              case ConnectionState.active:
+                return const SizedBox();
+              case ConnectionState.done:
+                if (snapshot.hasData) {
+                  return Image.memory(
+                    snapshot.data!,
+                    fit: BoxFit.cover,
+                  );
+                } else {
+                  return const Center(
+                    child: Icon(
+                      Icons.error,
+                    ),
+                  );
+                }
+            }
+          },
         ),
-        builder: (context, snapshot) {
-          switch (snapshot.connectionState) {
-            case ConnectionState.none:
-            case ConnectionState.waiting:
-            case ConnectionState.active:
-              return const CircularProgressIndicator();
-            case ConnectionState.done:
-              if (snapshot.hasData) {
-                return Image.memory(snapshot.data!);
-              } else {
-                return const Center(
-                  child: Icon(
-                    Icons.error,
-                  ),
-                );
-              }
-          }
-        },
       );
     } else {
       return const SizedBox();

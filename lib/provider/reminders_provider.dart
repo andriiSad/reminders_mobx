@@ -137,7 +137,6 @@ class FirestoreRemindersProvider implements RemindersProvider {
         _DocumentKeys.isDone: isDone,
       });
 
-  @override
   Future<void> _modifyReminder({
     required ReminderId reminderId,
     required String userId,
