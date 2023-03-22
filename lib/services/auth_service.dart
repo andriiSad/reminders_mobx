@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../auth/auth_error.dart';
 
-abstract class AuthProvider {
+abstract class AuthService {
   String? get userId;
   Future<bool> deleteAccountAndSignOut();
   Future<void> signOut();
@@ -16,7 +16,7 @@ abstract class AuthProvider {
   });
 }
 
-class FirebaseAuthProvider implements AuthProvider {
+class FirebaseAuthService implements AuthService {
   @override
   Future<bool> deleteAccountAndSignOut() async {
     final auth = FirebaseAuth.instance;

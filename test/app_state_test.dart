@@ -1,15 +1,17 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:reminders_mobx/state/app_state.dart';
 
-import 'mocks/mock_auth_provider.dart';
-import 'mocks/mock_reminders_provider.dart';
+import 'mocks/mock_auth_service.dart';
+import 'mocks/mock_image_upload_service.dart';
+import 'mocks/mock_reminders_service.dart';
 
 void main() {
   late AppState appState;
   setUp(() {
     appState = AppState(
-      remindersProvider: MockRemindersProvider(),
-      authProvider: MockAuthProvider(),
+      remindersService: MockRemindersService(),
+      authService: MockAuthService(),
+      imageUploadService: MockImageUploadService(),
     );
   });
 
@@ -18,18 +20,9 @@ void main() {
       appState.currentScreen,
       AppScreen.login,
     );
-    expect(
-      appState.authError,
-      null,
-    );
-    expect(
-      appState.isLoading,
-      false,
-    );
-    expect(
-      appState.reminders.isEmpty,
-      true,
-    );
+    appState.authError.expectNull();
+    appState.isLoading.expectFalse();
+    appState.reminders.isEmpty.expectTrue();
   });
 
   test('Going to screens', () {
@@ -61,6 +54,7 @@ void main() {
 
   test('Initializing the app state', () async {
     await appState.initialize();
+
     expect(
       appState.currentScreen,
       AppScreen.reminders,
@@ -69,14 +63,10 @@ void main() {
       appState.reminders.length,
       mockReminders.length,
     );
-    expect(
-      appState.reminders.contains(mockReminder1),
-      true,
-    );
-    expect(
-      appState.reminders.contains(mockReminder2),
-      true,
-    );
+
+    appState.reminders.contains(mockReminder1).expectTrue();
+
+    appState.reminders.contains(mockReminder2).expectTrue();
   });
   test('Modifying reminders', () async {
     await appState.initialize();
@@ -91,29 +81,22 @@ void main() {
       isDone: true,
     );
 
-    expect(
-      appState.reminders
-          .firstWhere((reminder) => reminder.id == mockReminder1Id)
-          .isDone,
-      false,
-    );
+    appState.reminders
+        .firstWhere((reminder) => reminder.id == mockReminder1Id)
+        .isDone
+        .expectFalse();
 
-    expect(
-      appState.reminders
-          .firstWhere((reminder) => reminder.id == mockReminder2Id)
-          .isDone,
-      true,
-    );
+    appState.reminders
+        .firstWhere((reminder) => reminder.id == mockReminder2Id)
+        .isDone
+        .expectTrue();
   });
   test('Creating reminders', () async {
     await appState.initialize();
     const text = 'text';
     final didCreate = await appState.createReminder(text);
 
-    expect(
-      didCreate,
-      true,
-    );
+    didCreate.expectTrue();
 
     expect(
       appState.reminders.length,
@@ -129,10 +112,7 @@ void main() {
       text,
     );
 
-    expect(
-      testReminder.isDone,
-      false,
-    );
+    testReminder.isDone.expectFalse();
   });
   test('Deleting reminders', () async {
     await appState.initialize();
@@ -141,10 +121,7 @@ void main() {
 
     var deleted = await appState.deleteReminder(reminder);
 
-    expect(
-      deleted,
-      true,
-    );
+    deleted.expectTrue();
 
     expect(
       appState.reminders.length,
@@ -155,10 +132,7 @@ void main() {
     count = appState.reminders.length;
     deleted = await appState.deleteReminder(mockReminder2);
 
-    expect(
-      deleted,
-      true,
-    );
+    deleted.expectTrue();
 
     expect(
       appState.reminders.length,
@@ -170,15 +144,9 @@ void main() {
     await appState.initialize();
     final didDeleteReminders = await appState.deleteAccount();
 
-    expect(
-      didDeleteReminders,
-      true,
-    );
+    didDeleteReminders.expectTrue();
 
-    expect(
-      appState.reminders.isEmpty,
-      true,
-    );
+    appState.reminders.isEmpty.expectTrue();
 
     expect(
       appState.currentScreen,
@@ -190,14 +158,65 @@ void main() {
 
     await appState.logOut();
 
-    expect(
-      appState.reminders.isEmpty,
-      true,
-    );
+    appState.reminders.isEmpty.expectTrue();
 
     expect(
       appState.currentScreen,
       AppScreen.login,
     );
   });
+
+  test('Uploading image for reminder', () async {
+    await appState.initialize();
+
+    final reminder = appState.reminders.firstWhere(
+      (element) => element.id == mockReminder1Id,
+    );
+    reminder.hasImage.expectFalse();
+    reminder.imageData.expectNull();
+
+    //fake uplode an image for this reminder
+
+    final couldUploadImage = await appState.upload(
+      filePath: 'dummy_path',
+      forReminderId: reminder.id,
+    );
+    couldUploadImage.expectTrue();
+    reminder.hasImage.expectTrue();
+    reminder.imageData.expectNull();
+
+    final imageData = await appState.getReminderImage(
+      reminderId: reminder.id,
+    );
+
+    imageData.expectNotNull();
+    imageData!.isEqualTo(mockReminder1ImageData).expectTrue();
+  });
+}
+
+extension Expectations on Object? {
+  void expectNull() => expect(this, isNull);
+  void expectNotNull() => expect(this, isNotNull);
+}
+
+extension BoolExpectations on bool {
+  void expectTrue() => expect(this, true);
+  void expectFalse() => expect(this, false);
+}
+
+extension Comparison<E> on List<E> {
+  bool isEqualTo(List<E> other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (length != other.length) {
+      return false;
+    }
+    for (var i = 0; i < length; i++) {
+      if (this[i] != other[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
 }
